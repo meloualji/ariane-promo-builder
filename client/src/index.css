@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0d0d0d;
+    color: white;
+    font-family: 'Montserrat', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  select option {
+    background-color: #1a1a1a;
+    color: white;
+  }
+}
+
+@layer components {
+  .glass-input {
+    @apply w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white font-montserrat text-sm placeholder-white/30 focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 transition-all backdrop-blur-sm appearance-none;
+  }
+
+  .shimmer-btn {
+    @apply relative inline-flex items-center justify-center overflow-hidden rounded-lg border border-gold/30 bg-black/60 px-6 py-3 font-cinzel text-sm tracking-widest text-gold transition-all hover:border-gold/60 hover:bg-black/80 active:scale-95 select-none;
+  }
+
+  .gold-divider {
+    @apply w-full h-px my-3;
+    background: linear-gradient(to right, transparent, rgba(201,168,76,0.5), transparent);
+  }
+
+  .section-heading {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #c9a84c, #e8d5a0, #c9a84c);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient 3s ease infinite;
+  }
+}
