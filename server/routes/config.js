@@ -19,43 +19,53 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 router.get('/', (req, res) => {
-  const db = getDb();
-  const config = db.prepare('SELECT * FROM brand_config WHERE id = 1').get();
-  res.json(config || {});
+  try {
+    const db = getDb();
+    const config = db.prepare('SELECT * FROM brand_config WHERE id = 1').get();
+    res.json(config || {});
+  } catch (err) {
+    console.error('GET /api/config error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.post('/', upload.single('logo'), (req, res) => {
-  const db = getDb();
-  const body = req.body;
+  try {
+    const db = getDb();
+    const body = req.body;
 
-  const current = db.prepare('SELECT * FROM brand_config WHERE id = 1').get();
+    const current = db.prepare('SELECT * FROM brand_config WHERE id = 1').get();
 
-  const updates = {
-    logo_size: body.logo_size || current.logo_size,
-    logo_position: body.logo_position || current.logo_position,
-    primary_color: body.primary_color || current.primary_color,
-    secondary_color: body.secondary_color || current.secondary_color,
-    accent_color: body.accent_color || current.accent_color,
-    phone: body.phone !== undefined ? body.phone : current.phone,
-    tagline: body.tagline !== undefined ? body.tagline : current.tagline,
-    brand_name: body.brand_name !== undefined ? body.brand_name : current.brand_name,
-    logo_url: req.file ? `/uploads/${req.file.filename}` : current.logo_url,
-  };
+    const updates = {
+      logo_size: body.logo_size || current.logo_size,
+      logo_position: body.logo_position || current.logo_position,
+      primary_color: body.primary_color || current.primary_color,
+      secondary_color: body.secondary_color || current.secondary_color,
+      accent_color: body.accent_color || current.accent_color,
+      phone: body.phone !== undefined ? body.phone : current.phone,
+      tagline: body.tagline !== undefined ? body.tagline : current.tagline,
+      brand_name: body.brand_name !== undefined ? body.brand_name : current.brand_name,
+      logo_url: req.file ? `/uploads/${req.file.filename}` : current.logo_url,
+    };
 
-  db.prepare(`
-    UPDATE brand_config SET
-      logo_url = ?, logo_size = ?, logo_position = ?,
-      primary_color = ?, secondary_color = ?, accent_color = ?,
-      phone = ?, tagline = ?, brand_name = ?
-    WHERE id = 1
-  `).run(
-    updates.logo_url, updates.logo_size, updates.logo_position,
-    updates.primary_color, updates.secondary_color, updates.accent_color,
-    updates.phone, updates.tagline, updates.brand_name
-  );
+    db.prepare(`
+      UPDATE brand_config SET
+        logo_url = ?, logo_size = ?, logo_position = ?,
+        primary_color = ?, secondary_color = ?, accent_color = ?,
+        phone = ?, tagline = ?, brand_name = ?
+      WHERE id = 1
+    `).run(
+      updates.logo_url, updates.logo_size, updates.logo_position,
+      updates.primary_color, updates.secondary_color, updates.accent_color,
+      updates.phone, updates.tagline, updates.brand_name
+    );
 
-  const saved = db.prepare('SELECT * FROM brand_config WHERE id = 1').get();
-  res.json(saved);
+    const saved = db.prepare('SELECT * FROM brand_config WHERE id = 1').get();
+    res.json(saved);
+  } catch (err) {
+    console.error('POST /api/config error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
