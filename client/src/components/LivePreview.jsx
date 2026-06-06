@@ -64,6 +64,11 @@ export default function LivePreview({ brandConfig, promoData, onExport }) {
 
   const items = promo.items || [];
 
+  // Fall back to brandConfig values when promoData fields are empty (e.g. before
+  // App.jsx's async fetch has set promoData, or during the 150 ms debounce window)
+  const displayPhone = promo.phone || cfg.phone || '';
+  const displayTagline = promo.tagline || cfg.tagline || '';
+
   const cornerStyles = [
     { top: 10, left: 10, borderTop: `1px solid ${goldColor}`, borderLeft: `1px solid ${goldColor}` },
     { top: 10, right: 10, borderTop: `1px solid ${goldColor}`, borderRight: `1px solid ${goldColor}` },
@@ -199,17 +204,17 @@ export default function LivePreview({ brandConfig, promoData, onExport }) {
               {divider}
 
               {/* WhatsApp */}
-              {promo.phone && (
+              {displayPhone && (
                 <div className="flex items-center gap-1 font-cormorant italic mt-1" style={{ color: goldColor, fontSize: 8.5 }}>
                   {WA_ICON}
-                  {promo.phone}
+                  {displayPhone}
                 </div>
               )}
 
               {/* Tagline */}
-              {promo.tagline && (
+              {displayTagline && (
                 <div className="font-cormorant italic text-center mt-0.5" style={{ color: `${goldColor}90`, fontSize: 7.5 }}>
-                  {promo.tagline}
+                  {displayTagline}
                 </div>
               )}
 
