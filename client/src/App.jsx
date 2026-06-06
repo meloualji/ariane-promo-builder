@@ -37,16 +37,19 @@ export default function App() {
 
   useEffect(() => {
     fetch('/api/config')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(cfg => {
         setBrandConfig(cfg);
         setPromoData(prev => ({
           ...prev,
-          phone: cfg.phone || '',
-          tagline: cfg.tagline || 'Offre limitée · Sur rendez-vous',
+          phone: cfg.phone ?? '',
+          tagline: cfg.tagline ?? 'Offre limitée · Sur rendez-vous',
         }));
       })
-      .catch(console.error);
+      .catch(err => console.error('[App] config load error:', err));
   }, []);
 
   return (
@@ -80,13 +83,12 @@ export default function App() {
           {screen === 'brandConfig' && (
             <motion.div key="brandConfig" variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
               <BrandConfig
-                config={brandConfig}
                 onSave={cfg => {
                   setBrandConfig(cfg);
                   setPromoData(prev => ({
                     ...prev,
-                    phone: cfg.phone !== undefined ? cfg.phone : prev.phone,
-                    tagline: cfg.tagline !== undefined ? cfg.tagline : prev.tagline,
+                    phone: cfg.phone ?? prev.phone,
+                    tagline: cfg.tagline ?? prev.tagline,
                   }));
                   setScreen('promoEditor');
                 }}

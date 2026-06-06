@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Save, Palette, Phone, Type, Image } from 'lucide-react';
 
-export default function BrandConfig({ config, onSave }) {
+export default function BrandConfig({ onSave }) {
   const [form, setForm] = useState({
     brand_name: 'ARIANE COSMETICS',
     logo_size: 'medium',
@@ -17,23 +17,33 @@ export default function BrandConfig({ config, onSave }) {
   const [logoPreview, setLogoPreview] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch directly on mount — self-sufficient, no parent prop dependency
   useEffect(() => {
-    if (config) {
-      setForm(prev => ({
-        ...prev,
-        brand_name: config.brand_name ?? prev.brand_name,
-        logo_size: config.logo_size ?? prev.logo_size,
-        logo_position: config.logo_position ?? prev.logo_position,
-        primary_color: config.primary_color ?? prev.primary_color,
-        secondary_color: config.secondary_color ?? prev.secondary_color,
-        accent_color: config.accent_color ?? prev.accent_color,
-        phone: config.phone ?? '',
-        tagline: config.tagline ?? prev.tagline,
-      }));
-      if (config.logo_url) setLogoPreview(config.logo_url);
-    }
-  }, [config]);
+    fetch('/api/config')
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(cfg => {
+        if (!cfg || cfg.error) return;
+        setForm(prev => ({
+          ...prev,
+          brand_name: cfg.brand_name ?? prev.brand_name,
+          logo_size: cfg.logo_size ?? prev.logo_size,
+          logo_position: cfg.logo_position ?? prev.logo_position,
+          primary_color: cfg.primary_color ?? prev.primary_color,
+          secondary_color: cfg.secondary_color ?? prev.secondary_color,
+          accent_color: cfg.accent_color ?? prev.accent_color,
+          phone: cfg.phone ?? '',
+          tagline: cfg.tagline ?? prev.tagline,
+        }));
+        if (cfg.logo_url) setLogoPreview(cfg.logo_url);
+      })
+      .catch(err => console.error('[BrandConfig] load error:', err))
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
@@ -52,12 +62,13 @@ export default function BrandConfig({ config, onSave }) {
       Object.entries(form).forEach(([k, v]) => fd.append(k, v ?? ''));
       if (logoFile) fd.append('logo', logoFile);
       const res = await fetch('/api/config', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const saved = await res.json();
       setSavedOk(true);
       setTimeout(() => setSavedOk(false), 2500);
       onSave(saved);
     } catch (err) {
-      console.error(err);
+      console.error('[BrandConfig] save error:', err);
     } finally {
       setSaving(false);
     }
@@ -71,6 +82,17 @@ export default function BrandConfig({ config, onSave }) {
       {children}
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-6 flex items-center justify-center" style={{ minHeight: 300 }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-gold/20 border-t-gold animate-spin" />
+          <p className="font-montserrat text-xs text-white/30">Chargement de la configuration…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
