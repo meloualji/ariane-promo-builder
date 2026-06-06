@@ -81,7 +81,15 @@ export default function App() {
             <motion.div key="brandConfig" variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
               <BrandConfig
                 config={brandConfig}
-                onSave={cfg => { setBrandConfig(cfg); setScreen('promoEditor'); }}
+                onSave={cfg => {
+                  setBrandConfig(cfg);
+                  setPromoData(prev => ({
+                    ...prev,
+                    phone: cfg.phone !== undefined ? cfg.phone : prev.phone,
+                    tagline: cfg.tagline !== undefined ? cfg.tagline : prev.tagline,
+                  }));
+                  setScreen('promoEditor');
+                }}
               />
             </motion.div>
           )}

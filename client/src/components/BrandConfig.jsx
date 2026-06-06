@@ -22,14 +22,14 @@ export default function BrandConfig({ config, onSave }) {
     if (config) {
       setForm(prev => ({
         ...prev,
-        brand_name: config.brand_name || prev.brand_name,
-        logo_size: config.logo_size || prev.logo_size,
-        logo_position: config.logo_position || prev.logo_position,
-        primary_color: config.primary_color || prev.primary_color,
-        secondary_color: config.secondary_color || prev.secondary_color,
-        accent_color: config.accent_color || prev.accent_color,
-        phone: config.phone || '',
-        tagline: config.tagline || prev.tagline,
+        brand_name: config.brand_name ?? prev.brand_name,
+        logo_size: config.logo_size ?? prev.logo_size,
+        logo_position: config.logo_position ?? prev.logo_position,
+        primary_color: config.primary_color ?? prev.primary_color,
+        secondary_color: config.secondary_color ?? prev.secondary_color,
+        accent_color: config.accent_color ?? prev.accent_color,
+        phone: config.phone ?? '',
+        tagline: config.tagline ?? prev.tagline,
       }));
       if (config.logo_url) setLogoPreview(config.logo_url);
     }
