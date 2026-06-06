@@ -4,6 +4,16 @@ const path = require('path');
 
 const router = express.Router();
 
+const PORT = process.env.PORT || 3042;
+
+// Resolve a possibly-relative server URL to an absolute one so Puppeteer
+// (which has no real origin when using setContent) can actually fetch it.
+function toAbsoluteUrl(url) {
+  if (!url) return url;
+  if (url.startsWith('/')) return `http://127.0.0.1:${PORT}${url}`;
+  return url;
+}
+
 function generatePromoHTML(data, width, height) {
   const { config, promo } = data;
   const goldColor = config.secondary_color || '#c9a84c';
@@ -139,7 +149,7 @@ function generatePromoHTML(data, width, height) {
       margin-bottom: ${Math.round(height * 0.015)}px;
       flex-shrink: 0;
     ">
-      <img src="${config.logo_url}" style="width:100%;height:100%;object-fit:cover;" />
+      <img src="${toAbsoluteUrl(config.logo_url)}" style="width:100%;height:100%;object-fit:cover;" />
     </div>` : ''}
 
     <!-- Brand name -->
@@ -233,8 +243,13 @@ function generatePromoHTML(data, width, height) {
 
 async function renderToPNG(html, width, height) {
   const launchOptions = {
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+    ],
   };
   if (process.env.PUPPETEER_EXECUTABLE_PATH) {
     launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
@@ -242,10 +257,16 @@ async function renderToPNG(html, width, height) {
   const browser = await puppeteer.launch(launchOptions);
   try {
     const page = await browser.newPage();
-    await page.setViewport({ width, height });
-    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
-    await new Promise(r => setTimeout(r, 500));
-    const buffer = await page.screenshot({ type: 'png' });
+    await page.setViewport({ width, height, deviceScaleFactor: 1 });
+    // domcontentloaded avoids hanging forever if Google Fonts CDN is slow
+    await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    // Wait for CSS fonts to actually finish loading (with a 5 s safety cap)
+    await Promise.race([
+      page.evaluateHandle('document.fonts.ready'),
+      new Promise(r => setTimeout(r, 5000)),
+    ]);
+    await new Promise(r => setTimeout(r, 200));
+    const buffer = await page.screenshot({ type: 'png', fullPage: false });
     return buffer;
   } finally {
     await browser.close();
