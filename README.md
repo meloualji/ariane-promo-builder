@@ -83,13 +83,13 @@ pm2 save
 
 ### Update deployment
 
+Use the deploy script — idempotent and safe to run multiple times:
+
 ```bash
-cd /var/www/ariane-promo-builder
-git pull origin main
-npm run install:all
-npm run build
-pm2 restart ariane-promo   # restarts THIS process only
+bash /var/www/ariane-promo-builder/scripts/deploy.sh
 ```
+
+The script: pulls `main` → installs server deps → rebuilds the React client → restarts only `ariane-promo` → saves the PM2 process list. It never touches other PM2 processes, `ecosystem.config.js`, or Nginx.
 
 ---
 
